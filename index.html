@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ru" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Alexei Țerna Pro | Finance</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Onest', '-apple-system', 'sans-serif'] },
+                    colors: {
+                        apple: { dark: '#0a0a0a', gray: '#1c1c1e' },
+                        maib: { DEFAULT: '#32D74B', dark: '#28a745' },
+                        procredit: { DEFAULT: '#FFFFFF', dark: '#E53935' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { -webkit-font-smoothing: antialiased; overscroll-behavior-y: none; background: #000; color: #fff; }
+        :root { --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -webkit-tap-highlight-color: transparent; }
+
+        .cinematic-enter { opacity: 0; transform: translateY(20px); animation: fadeUp 0.8s var(--ease-out-expo) forwards; }
+        .delay-100 { animation-delay: 0.1s; } .delay-200 { animation-delay: 0.2s; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes unlock { to { opacity: 0; transform: scale(1.05); visibility: hidden; } }
+
+        @keyframes tabEnter {
+            from { opacity: 0; transform: translateY(15px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .tab-view { display: none; }
+        .tab-view.active { display: block; animation: tabEnter 0.5s var(--ease-spring) forwards; }
+
+        #lock-screen {
+            position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: all 0.6s var(--ease-out-expo);
+        }
+
+        .glass-reflection {
+            position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.8s ease;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.02) 100%);
+        }
+        .group:hover .glass-reflection { opacity: 1; }
+        .btn-press { transition: all 0.2s var(--ease-spring); }
+        .btn-press:active { transform: scale(0.95); }
+
+        .modal-overlay { opacity: 0; pointer-events: none; backdrop-filter: blur(0px); transition: all 0.4s var(--ease-out-expo); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; backdrop-filter: blur(30px); }
+        .modal-content { transform: scale(0.9) translateY(40px); opacity: 0; transition: all 0.5s var(--ease-spring); }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+
+        .credit-card-container { perspective: 1000px; transform-style: preserve-3d; }
+        .credit-card { transition: transform 0.1s linear, box-shadow 0.3s ease; will-change: transform; }
+        .emoji-btn.selected { border-color: white; background: rgba(255,255,255,0.2); transform: scale(1.1); }
+        
+        .chart-wrapper { min-height: 0; flex: 1; position: relative; }
+    </style>
+</head>
+<body class="overflow-hidden flex h-screen w-full selection:bg-white/20">
+
+    <div id="lock-screen" onclick="document.getElementById('pin-input').focus()">
+        <input type="password" id="pin-input" inputmode="numeric" maxlength="6" class="absolute inset-0 w-full h-full opacity-0 cursor-default z-50" autofocus>
+        <div id="lock-avatar" class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-3xl font-bold border-2 border-white/20 mb-6 bg-cover bg-center relative z-40 pointer-events-none">A</div>
+        <h2 class="text-2xl font-semibold mb-8 tracking-tight relative z-40 pointer-events-none">Alexei Țerna</h2>
+        <div class="flex gap-4 mb-8 relative z-40 pointer-events-none" id="pin-dots">
+            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+        </div>
+        <p class="text-white/40 text-sm mt-4 relative z-40 pointer-events-none" id="pin-error">Кликни куда угодно и введи пароль</p>
+    </div>
+
+    <aside class="hidden md:flex w-64 flex-col justify-between p-6 border-r border-white/10 bg-[#0a0a0a]/80 backdrop-blur-3xl z-40 relative">
+        <div>
+            <div class="flex items-center gap-3 mb-10 pl-2">
+                <div id="sidebar-avatar" class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold border border-white/20 bg-cover bg-center shrink-0">A</div>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-xl tracking-tight truncate">Alexei Țerna</span>
+                    <span class="bg-gradient-to-r from-purple-500 to-indigo-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Pro</span>
+                </div>
+            </div>
+            
+            <div class="mb-8 px-2">
+                <select id="currency-select-desktop" class="w-full bg-[#1c1c1e] text-white/80 text-sm border border-white/10 rounded-xl px-3 py-2 outline-none appearance-none cursor-pointer hover:bg-white/5 transition-colors">
+                    <option value="MDL">🇲🇩 MDL - Леи</option>
+                    <option value="EUR">🇪🇺 EUR - Евро</option>
+                    <option value="USD">🇺🇸 USD - Доллары</option>
+                </select>
+            </div>
+
+            <nav class="flex flex-col gap-2">
+                <button onclick="app.switchTab(0)" class="nav-btn d-nav bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] text-white flex items-center gap-3 px-4 py-3 rounded-2xl transition-all btn-press"><i data-feather="grid" class="w-5 h-5"></i><span class="font-medium">Главная</span></button>
+                <button onclick="app.switchTab(1)" class="nav-btn d-nav text-white/50 hover:text-white hover:bg-white/5 flex items-center gap-3 px-4 py-3 rounded-2xl transition-all btn-press"><i data-feather="credit-card" class="w-5 h-5"></i><span class="font-medium">Счета & Активы</span></button>
+                <button onclick="app.switchTab(2)" class="nav-btn d-nav text-white/50 hover:text-white hover:bg-white/5 flex items-center gap-3 px-4 py-3 rounded-2xl transition-all btn-press"><i data-feather="pie-chart" class="w-5 h-5"></i><span class="font-medium">Аналитика</span></button>
+                <button onclick="app.switchTab(3)" class="nav-btn d-nav text-white/50 hover:text-white hover:bg-white/5 flex items-center gap-3 px-4 py-3 rounded-2xl transition-all btn-press"><i data-feather="settings" class="w-5 h-5"></i><span class="font-medium">Настройки</span></button>
+            </nav>
+        </div>
+    </aside>
+
+    <main class="flex-1 relative overflow-y-auto overflow-x-hidden h-screen pb-24 md:pb-0 scroll-smooth">
+        <div class="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none mix-blend-screen z-0"></div>
+        <div class="fixed bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-purple-500/10 blur-[120px] pointer-events-none mix-blend-screen z-0"></div>
+
+        <div class="md:hidden flex justify-between items-center p-6 relative z-20">
+            <div class="flex items-center gap-2">
+                <div id="mobile-avatar" class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold border border-white/20 bg-cover bg-center shrink-0">A</div>
+                <span class="font-bold text-lg">Alexei Țerna</span>
+                <span class="bg-gradient-to-r from-purple-500 to-indigo-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">Pro</span>
+            </div>
+            <select id="currency-select-mobile" class="bg-[#1c1c1e] text-white/80 text-xs border border-white/10 rounded-lg px-2 py-1 outline-none appearance-none">
+                <option value="MDL">MDL</option><option value="EUR">EUR</option><option value="USD">USD</option>
+            </select>
+        </div>
+
+        <div class="max-w-5xl mx-auto px-6 md:px-12 pb-12 pt-4 md:pt-12 relative z-10">
+            
+            <div id="tab-0" class="tab-view active">
+                <div class="group relative w-full rounded-[2.5rem] p-8 md:p-10 mb-8 bg-gradient-to-br from-[#1c1c1e]/80 to-[#0a0a0a]/80 border border-white/[0.08] backdrop-blur-2xl shadow-2xl overflow-hidden transition-transform duration-500 cursor-pointer select-none" onclick="app.swipeWidget()" id="smart-widget">
+                    <div class="glass-reflection"></div>
+                    <div class="relative z-10">
+                        <div class="text-white/50 font-medium mb-2 flex items-center gap-2" id="widget-title"><i data-feather="layers" class="w-4 h-4"></i> Чистый Капитал</div>
+                        <div class="text-5xl md:text-7xl font-bold tracking-tighter mb-4 transition-all" id="widget-balance">0.00</div>
+                        <div class="flex items-center gap-4 text-sm">
+                            <div class="flex items-center gap-1 text-green-400 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                                <i data-feather="arrow-up-right" class="w-3.5 h-3.5"></i> <span id="widget-growth">+0.00</span>
+                            </div>
+                            <span class="text-white/40">За месяц</span>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-6 right-8 flex gap-2" id="widget-dots"></div>
+                </div>
+
+                <div class="rounded-3xl p-6 bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/5 cinematic-enter delay-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-medium tracking-tight">Недавние записи</h3>
+                        <span class="text-white/40 text-xs bg-white/5 px-2 py-1 rounded">Удержи для ред.</span>
+                    </div>
+                    <div id="activity-list" class="flex flex-col gap-2"></div>
+                </div>
+            </div>
+
+            <div id="tab-1" class="tab-view">
+                <h1 class="text-3xl font-semibold mb-8">Счета & Активы</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10" id="cards-container">
+                    <div class="credit-card-container group cursor-pointer" onclick="app.openEntityModal('account', 'maib')">
+                        <div class="credit-card relative aspect-[1.6/1] rounded-3xl p-6 bg-gradient-to-br from-maib to-maib-dark border border-white/20 shadow-[0_20px_40px_-10px_rgba(50,215,75,0.3)] overflow-hidden">
+                            <div class="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full blur-3xl group-hover:bg-white/30 transition-all"></div>
+                            <div class="h-full flex flex-col justify-between relative z-10 text-black">
+                                <div class="flex justify-between items-center"><div class="font-bold text-xl tracking-tighter">maib</div><i data-feather="wifi" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-black/60 text-sm font-medium mb-1">Баланс (клик для ред.)</div>
+                                    <div class="text-3xl font-bold tracking-tight val-render" data-raw-id="maib">0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="credit-card-container group cursor-pointer" onclick="app.openEntityModal('account', 'procredit')">
+                        <div class="credit-card relative aspect-[1.6/1] rounded-3xl p-6 bg-gradient-to-br from-white to-gray-200 border border-white/10 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden">
+                            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-red-600/20 rounded-full blur-2xl"></div>
+                            <div class="h-full flex flex-col justify-between relative z-10 text-apple-gray">
+                                <div class="flex justify-between items-center"><div class="font-bold text-xl tracking-tighter text-red-600">ProCreditBank</div></div>
+                                <div>
+                                    <div class="text-black/50 text-sm font-medium mb-1">Баланс (клик для ред.)</div>
+                                    <div class="text-3xl font-bold tracking-tight val-render" data-raw-id="procredit">0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="credit-card-container group cursor-pointer md:col-span-2" onclick="app.openEntityModal('account', 'cash')">
+                        <div class="credit-card relative h-24 rounded-3xl p-6 bg-[#1c1c1e] border border-white/10 shadow-lg overflow-hidden flex items-center justify-between hover:bg-white/5 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center"><i data-feather="dollar-sign"></i></div>
+                                <div class="font-bold text-xl text-white">Наличные (Тайник)</div>
+                            </div>
+                            <div class="text-2xl font-bold tracking-tight val-render text-white" data-raw-id="cash">0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-4 mt-8">
+                    <h2 class="text-xl font-medium">Физические активы</h2>
+                    <button class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all btn-press" onclick="app.openEntityModal('asset', 'new')"><i data-feather="plus" class="w-4 h-4"></i></button>
+                </div>
+                <div class="bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/5 rounded-3xl p-4 mb-10"><div id="assets-list" class="flex flex-col gap-2"></div></div>
+
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-medium text-red-400">Пассивы (Долги)</h2>
+                    <button class="w-8 h-8 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-all btn-press" onclick="app.openEntityModal('debt', 'new')"><i data-feather="plus" class="w-4 h-4"></i></button>
+                </div>
+                <div class="bg-[#1c1c1e]/50 backdrop-blur-xl border border-red-500/20 rounded-3xl p-4 mb-10"><div id="debts-list" class="flex flex-col gap-2"></div></div>
+
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-medium text-purple-400">Подписки</h2>
+                    <button class="w-8 h-8 rounded-full bg-purple-500/10 text-purple-400 flex items-center justify-center hover:bg-purple-500/20 transition-all btn-press" onclick="app.openEntityModal('subscription', 'new')"><i data-feather="plus" class="w-4 h-4"></i></button>
+                </div>
+                <div class="bg-[#1c1c1e]/50 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-4 mb-10"><div id="subscriptions-list" class="flex flex-col gap-2"></div></div>
+            </div>
+
+            <div id="tab-2" class="tab-view">
+                <h1 class="text-3xl font-semibold mb-6">Аналитика</h1>
+                <div class="flex bg-[#1c1c1e] p-1 rounded-xl mb-8 border border-white/10 w-full max-w-sm">
+                    <button class="flex-1 py-2 rounded-lg text-sm font-medium bg-white/10 shadow transition-all" id="filter-all" onclick="app.setFilter('all')">Всё</button>
+                    <button class="flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition-all" id="filter-personal" onclick="app.setFilter('personal')">Личное</button>
+                    <button class="flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition-all" id="filter-business" onclick="app.setFilter('business')">Бизнес</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/5 rounded-3xl p-6 h-[380px] flex flex-col">
+                        <h3 class="text-white/50 font-medium mb-4">Структура расходов</h3>
+                        <div class="chart-wrapper flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
+                        <div id="custom-legend" class="mt-4 flex flex-wrap gap-2 overflow-y-auto max-h-20 hide-scroll"></div>
+                    </div>
+                    
+                    <div class="bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/5 rounded-3xl p-6 h-[380px] flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-white/50 font-medium">Динамика капитала</h3>
+                            <button onclick="app.openCapitalModal()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors font-medium">Изменить</button>
+                        </div>
+                        <div class="chart-wrapper"><canvas id="wealthChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-3" class="tab-view">
+                <h1 class="text-3xl font-semibold mb-8">Настройки</h1>
+                <div class="bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden mb-6">
+                    <div class="p-6 border-b border-white/5 flex items-center gap-5">
+                        <div class="relative cursor-pointer group" onclick="document.getElementById('avatar-upload').click()">
+                            <div id="settings-avatar" class="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-2xl border-2 border-white/20 bg-cover bg-center overflow-hidden transition-transform group-hover:scale-105">A</div>
+                            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><i data-feather="camera" class="w-5 h-5 text-white"></i></div>
+                        </div>
+                        <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="app.uploadAvatar(event)">
+                        <div>
+                            <div class="font-semibold text-xl">Alexei Țerna</div>
+                            <div class="text-white/40 flex items-center gap-1 mt-1"><i data-feather="map-pin" class="w-3 h-3"></i> Chișinău</div>
+                        </div>
+                    </div>
+                    <button class="w-full flex items-center justify-between p-5 hover:bg-white/5 transition-colors" onclick="app.factoryReset()">
+                        <div class="flex items-center gap-4 text-red-400"><i data-feather="trash-2" class="w-5 h-5"></i><span class="font-medium">Сбросить все данные</span></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 p-4 pb-8 bg-gradient-to-t from-black via-black/90 to-transparent backdrop-blur-lg">
+        <div class="flex justify-around items-center px-6 py-4 bg-[#1c1c1e]/90 border border-white/10 rounded-full shadow-2xl relative">
+            <button onclick="app.switchTab(0)" class="nav-btn m-nav text-white relative flex flex-col items-center p-2"><i data-feather="grid" class="w-6 h-6"></i><div class="w-1 h-1 bg-white rounded-full mt-1 absolute -bottom-1"></div></button>
+            <button onclick="app.switchTab(1)" class="nav-btn m-nav text-white/40 relative flex flex-col items-center p-2"><i data-feather="credit-card" class="w-6 h-6"></i></button>
+            <button onclick="app.switchTab(2)" class="nav-btn m-nav text-white/40 relative flex flex-col items-center p-2"><i data-feather="pie-chart" class="w-6 h-6"></i></button>
+            <button onclick="app.switchTab(3)" class="nav-btn m-nav text-white/40 relative flex flex-col items-center p-2"><i data-feather="settings" class="w-6 h-6"></i></button>
+        </div>
+    </div>
+
+    <div class="fixed bottom-28 md:bottom-12 right-6 md:right-12 z-50 cinematic-enter delay-200">
+        <button onclick="app.openAddModal()" class="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:scale-105 transition-all btn-press">
+            <i data-feather="plus" class="w-8 h-8"></i>
+        </button>
+    </div>
+
+    <div id="tx-modal" class="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60">
+        <div class="absolute inset-0" onclick="app.closeModal('tx-modal')"></div>
+        <div class="modal-content w-full max-w-md bg-[#1c1c1e] rounded-[2rem] p-6 border border-white/10 shadow-2xl relative overflow-hidden z-10 flex flex-col max-h-[90vh]">
+            <div class="flex bg-black/50 p-1 rounded-xl mb-6 border border-white/5">
+                <button class="flex-1 py-2 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 transition-all" id="m-tab-exp" onclick="app.setTxType('expense')">Расход</button>
+                <button class="flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition-all" id="m-tab-inc" onclick="app.setTxType('income')">Доход</button>
+                <button class="flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition-all" id="m-tab-trf" onclick="app.setTxType('transfer')">Перевод</button>
+            </div>
+            <div class="overflow-y-auto pb-4 scroll-smooth flex-1 hide-scroll">
+                <input type="number" id="tx-amount" placeholder="0.00" class="w-full bg-transparent text-5xl font-bold tracking-tighter text-center focus:outline-none mb-6 placeholder:text-white/20">
+                <input type="text" id="tx-title" placeholder="Название (напр. Кофе Tucano)" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-white/30 text-white">
+                <input type="text" id="tx-desc" placeholder="Описание (необязательно)" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-6 text-sm focus:outline-none focus:border-white/30 text-white/70">
+
+                <div class="grid grid-cols-2 gap-3 mb-6" id="account-selectors">
+                    <div>
+                        <div class="text-xs text-white/40 mb-1 ml-1" id="acc-label-from">Со счета</div>
+                        <select id="tx-acc-from" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm outline-none appearance-none"></select>
+                    </div>
+                    <div id="acc-to-container" class="hidden">
+                        <div class="text-xs text-white/40 mb-1 ml-1">На счет</div>
+                        <select id="tx-acc-to" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm outline-none appearance-none"></select>
+                    </div>
+                </div>
+                <div class="mb-6" id="emoji-section">
+                    <div class="text-xs text-white/40 mb-2 ml-1">Тег / Категория</div>
+                    <div class="grid grid-cols-6 gap-2" id="emoji-grid"></div>
+                </div>
+                <div class="mb-6">
+                    <div class="text-xs text-white/40 mb-1 ml-1">Дата и время</div>
+                    <input type="datetime-local" id="tx-date" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none text-white block">
+                </div>
+            </div>
+            <div class="flex gap-3 mt-2 pt-4 border-t border-white/10">
+                <button id="btn-delete" class="hidden px-4 py-3 rounded-xl bg-red-500/10 text-red-400 font-medium btn-press" onclick="app.deleteCurrentTx()"><i data-feather="trash-2" class="w-5 h-5"></i></button>
+                <button class="flex-1 py-4 rounded-xl bg-white text-black font-semibold btn-press" onclick="app.saveTransaction()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="entity-modal" class="modal-overlay fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60">
+        <div class="absolute inset-0" onclick="app.closeModal('entity-modal')"></div>
+        <div class="modal-content w-full max-w-sm bg-[#1c1c1e] rounded-[2rem] p-6 border border-white/10 shadow-2xl relative z-10">
+            <h2 id="entity-modal-title" class="text-xl font-bold mb-6 text-center">Редактировать</h2>
+            <input type="hidden" id="entity-id">
+            <input type="hidden" id="entity-type">
+            
+            <div class="mb-4">
+                <div class="text-xs text-white/40 mb-1 ml-1">Баланс / Стоимость (MDL)</div>
+                <input type="number" id="entity-balance" class="w-full bg-transparent text-4xl font-bold text-center focus:outline-none mb-2 placeholder:text-white/20">
+            </div>
+
+            <div id="entity-details-section" class="mb-6">
+                <div class="text-xs text-white/40 mb-1 ml-1">Название</div>
+                <input type="text" id="entity-name" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-white/30 text-white">
+                <div class="text-xs text-white/40 mb-1 ml-1">Эмодзи (1 символ)</div>
+                <input type="text" id="entity-icon" maxlength="2" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-center text-2xl focus:outline-none focus:border-white/30">
+            </div>
+
+            <div id="entity-date-section" class="mb-6 hidden">
+                <div class="text-xs text-white/40 mb-1 ml-1">Дата списания</div>
+                <input type="date" id="entity-date" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 text-white">
+            </div>
+
+            <div class="flex gap-3">
+                <button id="btn-entity-delete" class="hidden px-4 py-3 rounded-xl bg-red-500/10 text-red-400 font-medium btn-press" onclick="app.deleteEntity()"><i data-feather="trash-2" class="w-5 h-5"></i></button>
+                <button class="flex-1 py-4 rounded-xl bg-white text-black font-semibold btn-press" onclick="app.saveEntity()">Готово</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="capital-modal" class="modal-overlay fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60">
+        <div class="absolute inset-0" onclick="app.closeModal('capital-modal')"></div>
+        <div class="modal-content w-full max-w-sm bg-[#1c1c1e] rounded-[2rem] p-6 border border-white/10 shadow-2xl relative z-10">
+            <h2 class="text-xl font-bold mb-6 text-center">Рост капитала (MDL)</h2>
+            <div class="text-sm text-white/50 text-center mb-6">Введи капитал за каждый месяц для графика</div>
+            <div class="flex flex-col gap-3 mb-6" id="capital-inputs">
+                </div>
+            <button class="w-full py-4 rounded-xl bg-white text-black font-semibold btn-press" onclick="app.saveCapital()">Сохранить</button>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+
+        const EMOJIS = [
+            { e:'☕', t:'personal' }, { e:'🍔', t:'personal' }, { e:'🚕', t:'personal' }, { e:'🛒', t:'personal' },
+            { e:'👕', t:'personal' }, { e:'🎬', t:'personal' }, { e:'🏋️‍♂️', t:'personal' }, { e:'🎮', t:'personal' },
+            { e:'💻', t:'business' }, { e:'📦', t:'business' }, { e:'📢', t:'business' }, { e:'📈', t:'business' },
+            { e:'💰', t:'business' }, { e:'🎓', t:'personal' }, { e:'✈️', t:'personal' }, { e:'⚡', t:'personal' }
+        ];
+        
+        const CHART_COLORS = ['#0A84FF', '#32D74B', '#FF9F0A', '#FF453A', '#BF5AF2', '#5E5CE6', '#FF375F', '#30D158'];
+
+        const DEFAULT_DATA = {
+            avatar: null,
+            accounts: [
+                { id: 'maib', name: 'Maib', balance: 32000 },
+                { id: 'procredit', name: 'ProCreditBank', balance: 78500 },
+                { id: 'cash', name: 'Наличные', balance: 14000 }
+            ],
+            assets: [
+                { id: 'a1', name: 'MacBook Pro', balance: 15000, icon: '💻' },
+                { id: 'a2', name: 'Велосипед', balance: 12000, icon: '🚴‍♂️' },
+                { id: 'a3', name: 'Телефон', balance: 3000, icon: '📱' },
+                { id: 'a4', name: 'Беговые кроссовки', balance: 3000, icon: '👟' }
+            ],
+            debts: [],
+            subscriptions: [],
+            transactions: [],
+            monthlyCapital: [0, 0, 0, 0, 0, 0] // Jan - Jun manual capital tracking
+        };
+
+        const RATES = { MDL: 1, EUR: 0.052, USD: 0.056 };
+        const CURRENCY_SYMBOLS = { MDL: ' MDL', EUR: '€', USD: '$' };
+
+        class FinanceApp {
+            constructor() {
+                this.loadData();
+                this.currency = localStorage.getItem('pref_currency') || 'MDL';
+                this.activeTab = 0;
+                this.widgetIndex = 0;
+                this.analyticsFilter = 'all';
+                this.editingId = null;
+                this.txType = 'expense';
+                this.selectedEmoji = '⚡';
+                
+                document.addEventListener('keydown', (e) => {
+                    const lockScreen = document.getElementById('lock-screen');
+                    if (lockScreen.style.visibility !== 'hidden' && lockScreen.style.opacity !== '0') {
+                        document.getElementById('pin-input').focus();
+                    }
+                });
+
+                this.initAuth();
+                this.initDOM();
+                this.initCardPhysics();
+            }
+
+            loadData() {
+                const stored = localStorage.getItem('reserve_os_data');
+                if(stored) { 
+                    this.data = JSON.parse(stored); 
+                    if(!this.data.debts) this.data.debts = [];
+                    if(!this.data.subscriptions) this.data.subscriptions = [];
+                    if(!this.data.monthlyCapital) this.data.monthlyCapital = [0, 0, 0, 0, 0, 0];
+                } else { 
+                    this.data = JSON.parse(JSON.stringify(DEFAULT_DATA)); 
+                    this.saveData(); 
+                }
+            }
+            saveData() { localStorage.setItem('reserve_os_data', JSON.stringify(this.data)); }
+
+            uploadAvatar(e) {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        this.data.avatar = event.target.result;
+                        this.saveData();
+                        this.renderAvatar();
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            renderAvatar() {
+                const avs = ['lock-avatar', 'sidebar-avatar', 'settings-avatar', 'mobile-avatar'];
+                avs.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        if(this.data.avatar) {
+                            el.style.backgroundImage = `url(${this.data.avatar})`;
+                            el.innerHTML = '';
+                        } else {
+                            el.style.backgroundImage = '';
+                            el.innerHTML = 'A';
+                        }
+                    }
+                });
+            }
+
+            factoryReset() {
+                if(confirm("Точно удалить все данные? Это действие необратимо.")) {
+                    localStorage.removeItem('reserve_os_data');
+                    location.reload();
+                }
+            }
+
+            initAuth() {
+                this.renderAvatar();
+                const input = document.getElementById('pin-input');
+                const dots = document.getElementById('pin-dots').children;
+                const err = document.getElementById('pin-error');
+                
+                input.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    err.innerText = "Кликни куда угодно и введи пароль"; 
+                    for(let i=0; i<6; i++) {
+                        dots[i].className = i < val.length ? 'w-4 h-4 rounded-full bg-white transition-all scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'w-4 h-4 rounded-full border-2 border-white/30 transition-all';
+                    }
+                    if(val.length === 6) {
+                        if(val === '684802') {
+                            document.getElementById('lock-screen').style.animation = 'unlock 0.6s var(--ease-out-expo) forwards';
+                            setTimeout(() => { input.blur(); this.renderAll(); }, 200);
+                        } else {
+                            err.innerText = "Неверный пароль";
+                            document.getElementById('pin-dots').classList.add('animate-bounce');
+                            setTimeout(() => {
+                                input.value = '';
+                                Array.from(dots).forEach(d => d.className = 'w-4 h-4 rounded-full border-2 border-white/30 transition-all');
+                                document.getElementById('pin-dots').classList.remove('animate-bounce');
+                            }, 500);
+                        }
+                    }
+                });
+            }
+
+            convert(val) { return val * RATES[this.currency]; }
+            format(val, showSign = false) {
+                const converted = this.convert(val);
+                const sym = CURRENCY_SYMBOLS[this.currency];
+                const num = converted.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                const prefix = showSign ? (val > 0 ? '+' : '') : '';
+                return this.currency === 'MDL' ? `${prefix}${num}${sym}` : `${sym}${prefix}${num}`;
+            }
+
+            setCurrency(cur) {
+                this.currency = cur;
+                localStorage.setItem('pref_currency', cur);
+                document.getElementById('currency-select-desktop').value = cur;
+                document.getElementById('currency-select-mobile').value = cur;
+                this.renderAll();
+            }
+
+            // --- WIDGET ---
+            getWidgetEntities() {
+                const accSum = this.data.accounts.reduce((sum, a) => sum + a.balance, 0);
+                const assSum = this.data.assets.reduce((sum, a) => sum + a.balance, 0);
+                const debtSum = this.data.debts.reduce((sum, d) => sum + d.balance, 0);
+                const total = accSum + assSum - debtSum;
+                
+                return [
+                    { name: 'Чистый Капитал', balance: total, icon: 'layers' },
+                    ...this.data.accounts.map(a => ({ name: a.name, balance: a.balance, icon: 'credit-card'})),
+                    { name: 'Физические активы', balance: assSum, icon: 'box' },
+                    { name: 'Пассивы (Долги)', balance: debtSum, icon: 'trending-down' }
+                ];
+            }
+            swipeWidget() { this.widgetIndex = (this.widgetIndex + 1) % this.getWidgetEntities().length; this.renderWidget(); }
+            
+            renderWidget() {
+                const entities = this.getWidgetEntities();
+                const current = entities[this.widgetIndex];
+                const titleEl = document.getElementById('widget-title');
+                const balEl = document.getElementById('widget-balance');
+                
+                titleEl.style.opacity = 0; balEl.style.opacity = 0;
+                setTimeout(() => {
+                    titleEl.innerHTML = `<i data-feather="${current.icon}" class="w-4 h-4"></i> ${current.name}`;
+                    feather.replace();
+                    balEl.innerText = this.format(current.balance);
+                    document.getElementById('widget-dots').innerHTML = entities.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full transition-all ${i === this.widgetIndex ? 'bg-white w-4' : 'bg-white/30'}"></div>`).join('');
+                    titleEl.style.opacity = 1; balEl.style.opacity = 1;
+                }, 200);
+            }
+
+            renderAll() {
+                this.renderWidget();
+                this.renderEntitiesLists();
+                this.renderTransactions();
+                this.updateRawValues();
+                if(this.activeTab === 2) this.renderCharts();
+            }
+
+            updateRawValues() {
+                document.querySelectorAll('.val-render').forEach(el => {
+                    let rawId = el.getAttribute('data-raw-id');
+                    let val = 0;
+                    if(rawId) {
+                        const acc = this.data.accounts.find(a => a.id === rawId);
+                        if(acc) val = acc.balance;
+                    } else { val = parseFloat(el.getAttribute('data-raw')); }
+                    el.innerText = this.format(val);
+                });
+            }
+
+            renderEntitiesLists() {
+                const createHtml = (arr, type) => arr.map(item => {
+                    const extraStr = type === 'subscription' && item.date ? `<div class="text-xs text-white/40 mt-1">Списание: ${new Date(item.date).toLocaleDateString('ru-RU')}</div>` : '';
+                    const colorClass = type === 'debt' ? 'text-red-400' : (type === 'subscription' ? 'text-purple-400' : '');
+                    return `
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors group cursor-pointer" onclick="app.openEntityModal('${type}', '${item.id}')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-black/50 flex items-center justify-center text-xl border border-white/10 group-hover:scale-110 transition-transform">${item.icon}</div>
+                            <div><div class="font-medium">${item.name}</div>${extraStr}</div>
+                        </div>
+                        <div class="font-semibold tracking-tight text-lg ${colorClass}">${this.format(item.balance)}</div>
+                    </div>`
+                }).join('');
+
+                document.getElementById('assets-list').innerHTML = createHtml(this.data.assets, 'asset') || '<div class="text-white/40 text-sm py-2">Нет активов</div>';
+                document.getElementById('debts-list').innerHTML = createHtml(this.data.debts, 'debt') || '<div class="text-white/40 text-sm py-2">Нет долгов</div>';
+                document.getElementById('subscriptions-list').innerHTML = createHtml(this.data.subscriptions, 'subscription') || '<div class="text-white/40 text-sm py-2">Нет активных подписок</div>';
+            }
+
+            renderTransactions() {
+                const c = document.getElementById('activity-list');
+                const sorted = [...this.data.transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
+                if(sorted.length === 0) return c.innerHTML = `<div class="text-white/40 text-center py-6">Нет записей</div>`;
+
+                c.innerHTML = sorted.map(tx => {
+                    const isExp = tx.type === 'expense', isTrf = tx.type === 'transfer';
+                    let sign = isExp ? '-' : '+', col = isExp ? '' : 'text-green-400';
+                    if(isTrf) { sign = ''; col = 'text-white/50'; }
+                    const accName = isTrf ? `${this.getAccName(tx.accFrom)} → ${this.getAccName(tx.accTo)}` : this.getAccName(tx.accFrom);
+                    const dt = new Date(tx.date);
+                    const timeStr = `${dt.getDate()} ${dt.toLocaleString('ru',{month:'short'})}, ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+
+                    return `<div class="flex items-center justify-between group cursor-pointer p-3 rounded-2xl hover:bg-white/5 transition-colors tx-item select-none" data-id="${tx.id}">
+                        <div class="flex items-center gap-4 pointer-events-none">
+                            <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl border border-white/5 group-hover:bg-white/10 transition-colors">${tx.emoji}</div>
+                            <div><div class="font-medium">${tx.title}</div><div class="text-xs text-white/40 mt-0.5">${accName} • ${timeStr}</div></div>
+                        </div>
+                        <div class="font-medium tracking-tight ${col} pointer-events-none">${sign}${this.format(tx.amount)}</div>
+                    </div>`;
+                }).join('');
+
+                document.querySelectorAll('.tx-item').forEach(item => {
+                    item.addEventListener('touchstart', e => this.startLongPress(e, item.dataset.id), {passive: true});
+                    item.addEventListener('touchend', () => clearTimeout(this.longPressTimer));
+                    item.addEventListener('touchmove', () => clearTimeout(this.longPressTimer), {passive: true});
+                    item.addEventListener('mousedown', e => this.startLongPress(e, item.dataset.id));
+                    item.addEventListener('mouseup', () => clearTimeout(this.longPressTimer));
+                    item.addEventListener('mouseleave', () => clearTimeout(this.longPressTimer));
+                });
+            }
+
+            getAccName(id) { const a = this.data.accounts.find(x=>x.id===id); return a ? a.name : 'Счет'; }
+            startLongPress(e, id) { this.longPressTimer = setTimeout(() => { navigator.vibrate && navigator.vibrate(50); this.openEditModal(id); }, 600); }
+
+            // --- ENTITY MODAL (ACCOUNTS / ASSETS / DEBTS / SUBS) ---
+            openEntityModal(type, id) {
+                const modal = document.getElementById('entity-modal');
+                document.getElementById('entity-type').value = type;
+                document.getElementById('entity-id').value = id;
+                
+                const titleEl = document.getElementById('entity-modal-title');
+                const balEl = document.getElementById('entity-balance');
+                const nameEl = document.getElementById('entity-name');
+                const iconEl = document.getElementById('entity-icon');
+                const dateEl = document.getElementById('entity-date');
+                const detailsSec = document.getElementById('entity-details-section');
+                const dateSec = document.getElementById('entity-date-section');
+                const delBtn = document.getElementById('btn-entity-delete');
+
+                detailsSec.classList.remove('hidden');
+                dateSec.classList.add('hidden');
+                delBtn.classList.remove('hidden');
+                balEl.value = ''; nameEl.value = ''; iconEl.value = ''; dateEl.value = '';
+
+                const arrMap = { asset: this.data.assets, debt: this.data.debts, subscription: this.data.subscriptions };
+                const titles = { asset: 'Актив', debt: 'Долг', subscription: 'Подписку' };
+                const defaultIcons = { asset: '📦', debt: '🤝', subscription: '💳' };
+
+                if (type === 'account') {
+                    const acc = this.data.accounts.find(a => a.id === id);
+                    titleEl.innerText = 'Редактировать Счет';
+                    balEl.value = acc.balance;
+                    detailsSec.classList.add('hidden'); 
+                    delBtn.classList.add('hidden'); 
+                } else {
+                    if (type === 'subscription') dateSec.classList.remove('hidden');
+
+                    if (id === 'new') {
+                        titleEl.innerText = `Добавить ${titles[type]}`;
+                        iconEl.value = defaultIcons[type];
+                        delBtn.classList.add('hidden');
+                    } else {
+                        titleEl.innerText = `Ред. ${titles[type]}`;
+                        const item = arrMap[type].find(a => a.id === id);
+                        balEl.value = item.balance; nameEl.value = item.name; iconEl.value = item.icon;
+                        if(type === 'subscription') dateEl.value = item.date || '';
+                    }
+                }
+                modal.classList.add('active');
+                setTimeout(() => balEl.focus(), 100);
+            }
+
+            saveEntity() {
+                const type = document.getElementById('entity-type').value;
+                const id = document.getElementById('entity-id').value;
+                const bal = parseFloat(document.getElementById('entity-balance').value);
+                
+                if (isNaN(bal)) return alert('Введите корректный баланс');
+
+                if (type === 'account') {
+                    const acc = this.data.accounts.find(a => a.id === id);
+                    acc.balance = bal;
+                } else {
+                    const arrMap = { asset: this.data.assets, debt: this.data.debts, subscription: this.data.subscriptions };
+                    const targetArr = arrMap[type];
+                    
+                    const name = document.getElementById('entity-name').value.trim() || 'Без названия';
+                    const icon = document.getElementById('entity-icon').value.trim() || '📦';
+                    const date = document.getElementById('entity-date').value;
+
+                    if (id === 'new') {
+                        const newObj = { id: `${type}_${Date.now()}`, name, balance: bal, icon: icon.substring(0,2) };
+                        if(type === 'subscription') newObj.date = date;
+                        targetArr.push(newObj);
+                    } else {
+                        const item = targetArr.find(a => a.id === id);
+                        item.balance = bal; item.name = name; item.icon = icon.substring(0,2);
+                        if(type === 'subscription') item.date = date;
+                    }
+                }
+                this.saveData(); this.closeModal('entity-modal'); this.renderAll();
+            }
+
+            deleteEntity() {
+                const type = document.getElementById('entity-type').value;
+                const id = document.getElementById('entity-id').value;
+                if (type !== 'account' && id !== 'new') {
+                    if(confirm('Точно удалить?')) {
+                        if(type === 'asset') this.data.assets = this.data.assets.filter(a => a.id !== id);
+                        if(type === 'debt') this.data.debts = this.data.debts.filter(a => a.id !== id);
+                        if(type === 'subscription') this.data.subscriptions = this.data.subscriptions.filter(a => a.id !== id);
+                        
+                        this.saveData(); this.closeModal('entity-modal'); this.renderAll();
+                    }
+                }
+            }
+
+            // --- TX MODALS ---
+            openAddModal() {
+                this.editingId = null;
+                document.getElementById('tx-amount').value = ''; document.getElementById('tx-title').value = ''; document.getElementById('tx-desc').value = '';
+                this.setTxType('expense');
+                const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('tx-date').value = now.toISOString().slice(0,16);
+                
+                this.populateAccDropdowns(); this.buildEmojiGrid();
+                document.getElementById('btn-delete').classList.add('hidden');
+                document.getElementById('tx-modal').classList.add('active');
+            }
+
+            openEditModal(id) {
+                this.editingId = id; const tx = this.data.transactions.find(t => t.id === id); if(!tx) return;
+                this.setTxType(tx.type);
+                document.getElementById('tx-amount').value = tx.amount; document.getElementById('tx-title').value = tx.title; document.getElementById('tx-desc').value = tx.desc || '';
+                this.populateAccDropdowns();
+                document.getElementById('tx-acc-from').value = tx.accFrom; if(tx.type === 'transfer') document.getElementById('tx-acc-to').value = tx.accTo;
+                this.selectedEmoji = tx.emoji; this.buildEmojiGrid(); document.getElementById('tx-date').value = tx.date;
+                document.getElementById('btn-delete').classList.remove('hidden'); document.getElementById('tx-modal').classList.add('active');
+            }
+
+            closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); document.activeElement.blur(); }
+
+            setTxType(type) {
+                this.txType = type;
+                const typeMap = { 'expense': 'exp', 'income': 'inc', 'transfer': 'trf' };
+                
+                ['exp','inc','trf'].forEach(t => {
+                    document.getElementById(`m-tab-${t}`).className = 'flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition-all';
+                });
+                
+                const activeCls = type === 'expense' ? 'bg-red-500/20 text-red-400' : (type === 'income' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400');
+                document.getElementById(`m-tab-${typeMap[type]}`).className = `flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activeCls}`;
+                
+                const toContainer = document.getElementById('acc-to-container');
+                if (type === 'transfer') toContainer.classList.remove('hidden'); else toContainer.classList.add('hidden');
+                
+                document.getElementById('acc-label-from').innerText = type === 'income' ? 'На счет' : 'Со счета';
+                document.getElementById('emoji-section').style.display = type === 'transfer' ? 'none' : 'block';
+            }
+
+            populateAccDropdowns() {
+                const opts = this.data.accounts.map(a => `<option value="${a.id}" class="text-black">${a.name}</option>`).join('');
+                document.getElementById('tx-acc-from').innerHTML = opts; document.getElementById('tx-acc-to').innerHTML = opts;
+            }
+
+            buildEmojiGrid() {
+                document.getElementById('emoji-grid').innerHTML = EMOJIS.map(e => `<button class="emoji-btn aspect-square rounded-xl flex items-center justify-center text-2xl border border-transparent hover:bg-white/10 transition-all ${this.selectedEmoji === e.e ? 'selected' : ''}" onclick="app.selectEmoji('${e.e}')">${e.e}</button>`).join('');
+            }
+            selectEmoji(e) { this.selectedEmoji = e; this.buildEmojiGrid(); }
+
+            saveTransaction() {
+                const amt = parseFloat(document.getElementById('tx-amount').value), title = document.getElementById('tx-title').value.trim();
+                if(isNaN(amt) || amt <= 0 || !title) return alert("Введите сумму и название");
+                
+                if(this.editingId) {
+                    const oldTx = this.data.transactions.find(t => t.id === this.editingId);
+                    this.applyBalance(oldTx.accFrom, oldTx.amount, oldTx.type === 'expense' ? 'add' : 'sub');
+                    if(oldTx.type === 'transfer') this.applyBalance(oldTx.accTo, oldTx.amount, 'sub');
+                    this.data.transactions = this.data.transactions.filter(t => t.id !== this.editingId);
+                }
+
+                const tx = {
+                    id: this.editingId || Date.now().toString(), type: this.txType, amount: amt, title: title, desc: document.getElementById('tx-desc').value,
+                    accFrom: document.getElementById('tx-acc-from').value, accTo: document.getElementById('tx-acc-to').value,
+                    emoji: this.txType === 'transfer' ? '🔄' : this.selectedEmoji, tag: EMOJIS.find(e => e.e === this.selectedEmoji)?.t || 'personal', date: document.getElementById('tx-date').value
+                };
+
+                if(tx.type === 'expense') this.applyBalance(tx.accFrom, tx.amount, 'sub');
+                else if(tx.type === 'income') this.applyBalance(tx.accFrom, tx.amount, 'add');
+                else if(tx.type === 'transfer') {
+                    if(tx.accFrom === tx.accTo) return alert("Выберите разные счета");
+                    this.applyBalance(tx.accFrom, tx.amount, 'sub'); this.applyBalance(tx.accTo, tx.amount, 'add');
+                }
+
+                this.data.transactions.push(tx); this.saveData(); this.closeModal('tx-modal'); this.renderAll();
+            }
+
+            deleteCurrentTx() {
+                if(!this.editingId || !confirm("Точно удалить? Деньги вернутся на счета.")) return;
+                const tx = this.data.transactions.find(t => t.id === this.editingId);
+                this.applyBalance(tx.accFrom, tx.amount, tx.type === 'expense' ? 'add' : 'sub');
+                if(tx.type === 'transfer') this.applyBalance(tx.accTo, tx.amount, 'sub');
+                this.data.transactions = this.data.transactions.filter(t => t.id !== this.editingId);
+                this.saveData(); this.closeModal('tx-modal'); this.renderAll();
+            }
+
+            applyBalance(accId, amt, op) { const acc = this.data.accounts.find(a => a.id === accId); if(acc) acc.balance += (op === 'add' ? amt : -amt); }
+
+            // --- CAPITAL HISTORY MODAL ---
+            openCapitalModal() {
+                const months = ['Янв','Фев','Мар','Апр','Май','Июн'];
+                const html = months.map((m, i) => `
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/50 w-12">${m}</span>
+                        <input type="number" id="cap-input-${i}" value="${this.data.monthlyCapital[i]}" class="w-full ml-4 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-right focus:outline-none focus:border-white/30 text-white">
+                    </div>
+                `).join('');
+                document.getElementById('capital-inputs').innerHTML = html;
+                document.getElementById('capital-modal').classList.add('active');
+            }
+
+            saveCapital() {
+                for(let i=0; i<6; i++) {
+                    const val = parseFloat(document.getElementById(`cap-input-${i}`).value) || 0;
+                    this.data.monthlyCapital[i] = val;
+                }
+                this.saveData();
+                this.closeModal('capital-modal');
+                this.renderCharts();
+            }
+
+            // --- CHARTS ---
+            setFilter(f) {
+                this.analyticsFilter = f;
+                ['all','personal','business'].forEach(id => document.getElementById(`filter-${id}`).className = id === f ? 'flex-1 py-2 rounded-lg text-sm font-medium bg-white/10 shadow transition-all' : 'flex-1 py-2 rounded-lg text-sm font-medium text-white/50 transition-all');
+                this.renderCharts();
+            }
+
+            renderCharts() {
+                Chart.defaults.color = 'rgba(255,255,255,0.5)'; Chart.defaults.font.family = 'Onest';
+                let exp = this.data.transactions.filter(t => t.type === 'expense');
+                if(this.analyticsFilter !== 'all') exp = exp.filter(t => t.tag === this.analyticsFilter);
+
+                const grouped = {}; exp.forEach(t => { grouped[t.emoji] = (grouped[t.emoji] || 0) + this.convert(t.amount); });
+                const keys = Object.keys(grouped); const vals = Object.values(grouped);
+                const colors = keys.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]);
+                
+                const ctxD = document.getElementById('expenseChart').getContext('2d');
+                if(this.chartDonut) this.chartDonut.destroy();
+                this.chartDonut = new Chart(ctxD, {
+                    type: 'doughnut', data: { labels: keys, datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '80%', layout: { padding: 10 } }
+                });
+
+                document.getElementById('custom-legend').innerHTML = keys.map((k, i) => `
+                    <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                        <div class="w-3 h-3 rounded-full" style="background-color: ${colors[i]}"></div>
+                        <span class="text-sm font-medium">${k} ${this.format(vals[i])}</span>
+                    </div>
+                `).join('');
+
+                const ctxL = document.getElementById('wealthChart').getContext('2d');
+                const grad = ctxL.createLinearGradient(0, 0, 0, 300); grad.addColorStop(0, 'rgba(10, 132, 255, 0.4)'); grad.addColorStop(1, 'rgba(10, 132, 255, 0.0)');
+                
+                // Use user-defined monthly capital history
+                const capDataConverted = this.data.monthlyCapital.map(v => this.convert(v));
+                
+                if(this.chartLine) this.chartLine.destroy();
+                this.chartLine = new Chart(ctxL, {
+                    type: 'line', data: { labels: ['Янв','Фев','Мар','Апр','Май','Июн'], datasets: [{ data: capDataConverted, borderColor: '#0A84FF', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false, min: 0 }, x: { grid: { display: false } } }, interaction: { intersect: false, mode: 'index' } }
+                });
+            }
+
+            switchTab(idx) {
+                if(this.activeTab === idx) return;
+                this.activeTab = idx;
+                
+                document.querySelectorAll('.tab-view').forEach((t, i) => {
+                    t.style.animation = 'none'; // reset
+                    t.offsetHeight; // reflow
+                    t.style.animation = null;
+                    t.className = i===idx ? 'tab-view active' : 'tab-view hidden';
+                });
+
+                document.querySelectorAll('.d-nav').forEach((b, i) => b.className = i===idx ? 'nav-btn d-nav bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] text-white flex items-center gap-3 px-4 py-3 rounded-2xl transition-all btn-press' : 'nav-btn d-nav text-white/50 hover:text-white hover:bg-white/5 flex items-center gap-3 px-4 py-3 rounded-2xl transition-all btn-press');
+                document.querySelectorAll('.m-nav').forEach((b, i) => { const icon = b.innerHTML.split('<div')[0]; b.className = i===idx ? 'nav-btn m-nav text-white relative flex flex-col items-center p-2' : 'nav-btn m-nav text-white/40 relative flex flex-col items-center p-2'; b.innerHTML = i===idx ? `${icon}<div class="w-1 h-1 bg-white rounded-full mt-1 absolute -bottom-1 transition-all"></div>` : icon; });
+                if(idx === 2) this.renderCharts();
+            }
+
+            initDOM() {
+                document.getElementById('currency-select-desktop').addEventListener('change', e => this.setCurrency(e.target.value));
+                document.getElementById('currency-select-mobile').addEventListener('change', e => this.setCurrency(e.target.value));
+            }
+
+            initCardPhysics() {
+                document.querySelectorAll('.credit-card-container').forEach(c => {
+                    const card = c.querySelector('.credit-card');
+                    c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(); card.style.transform = `perspective(1000px) rotateX(${((e.clientY - r.top - r.height/2) / (r.height/2)) * -10}deg) rotateY(${((e.clientX - r.left - r.width/2) / (r.width/2)) * 10}deg) scale3d(1.02,1.02,1.02)`; });
+                    c.addEventListener('mouseleave', () => card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`);
+                });
+            }
+        }
+        const app = new FinanceApp();
+    </script>
+</body>
+</html>
