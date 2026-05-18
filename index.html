@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Alexei Pro">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+
     <title>Alexei Țerna Pro | Finance</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,8 +65,8 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.02) 100%);
         }
         .group:hover .glass-reflection { opacity: 1; }
-        .btn-press { transition: all 0.2s var(--ease-spring); }
-        .btn-press:active { transform: scale(0.95); }
+        .btn-press { transition: transform 0.15s var(--ease-spring); }
+        .btn-press:active { transform: scale(0.9); }
 
         .modal-overlay { opacity: 0; pointer-events: none; backdrop-filter: blur(0px); transition: all 0.4s var(--ease-out-expo); }
         .modal-overlay.active { opacity: 1; pointer-events: auto; backdrop-filter: blur(30px); }
@@ -75,19 +82,32 @@
 </head>
 <body class="overflow-hidden flex h-screen w-full selection:bg-white/20">
 
-    <div id="lock-screen" onclick="document.getElementById('pin-input').focus()">
-        <input type="password" id="pin-input" inputmode="numeric" maxlength="6" class="absolute inset-0 w-full h-full opacity-0 cursor-default z-50" autofocus>
-        <div id="lock-avatar" class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-3xl font-bold border-2 border-white/20 mb-6 bg-cover bg-center relative z-40 pointer-events-none">A</div>
-        <h2 class="text-2xl font-semibold mb-8 tracking-tight relative z-40 pointer-events-none">Alexei Țerna</h2>
-        <div class="flex gap-4 mb-8 relative z-40 pointer-events-none" id="pin-dots">
-            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
-            <div class="w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+    <div id="lock-screen">
+        <div id="lock-avatar" class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-3xl font-bold border-2 border-white/20 mb-4 bg-cover bg-center">A</div>
+        <h2 class="text-xl font-semibold mb-6 tracking-tight">Alexei Țerna</h2>
+        <div class="flex gap-4 mb-6" id="pin-dots">
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/30 transition-all"></div>
+            <div class="w-3.5 h-3.5 rounded-full border-2 border-white/30 transition-all"></div>
         </div>
-        <p class="text-white/40 text-sm mt-4 relative z-40 pointer-events-none" id="pin-error">Кликни куда угодно и введи пароль</p>
+        <p class="text-white/40 text-sm mb-6 h-5" id="pin-error">Введите пароль</p>
+
+        <div class="grid grid-cols-3 gap-x-8 gap-y-4">
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('1')">1</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('2')">2</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('3')">3</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('4')">4</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('5')">5</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('6')">6</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('7')">7</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('8')">8</button>
+            <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('9')">9</button>
+            <div></div> <button class="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-2xl font-light btn-press" onclick="app.pressPin('0')">0</button>
+            <button class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-light btn-press" onclick="app.pressPin('back')"><i data-feather="delete"></i></button>
+        </div>
     </div>
 
     <aside class="hidden md:flex w-64 flex-col justify-between p-6 border-r border-white/10 bg-[#0a0a0a]/80 backdrop-blur-3xl z-40 relative">
@@ -121,7 +141,7 @@
         <div class="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none mix-blend-screen z-0"></div>
         <div class="fixed bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-purple-500/10 blur-[120px] pointer-events-none mix-blend-screen z-0"></div>
 
-        <div class="md:hidden flex justify-between items-center p-6 relative z-20">
+        <div class="md:hidden flex justify-between items-center p-6 relative z-20 pt-10">
             <div class="flex items-center gap-2">
                 <div id="mobile-avatar" class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold border border-white/20 bg-cover bg-center shrink-0">A</div>
                 <span class="font-bold text-lg">Alexei Țerna</span>
@@ -132,14 +152,14 @@
             </select>
         </div>
 
-        <div class="max-w-5xl mx-auto px-6 md:px-12 pb-12 pt-4 md:pt-12 relative z-10">
+        <div class="max-w-5xl mx-auto px-5 md:px-12 pb-12 pt-2 md:pt-12 relative z-10">
             
             <div id="tab-0" class="tab-view active">
                 <div class="group relative w-full rounded-[2.5rem] p-8 md:p-10 mb-8 bg-gradient-to-br from-[#1c1c1e]/80 to-[#0a0a0a]/80 border border-white/[0.08] backdrop-blur-2xl shadow-2xl overflow-hidden transition-transform duration-500 cursor-pointer select-none" onclick="app.swipeWidget()" id="smart-widget">
                     <div class="glass-reflection"></div>
                     <div class="relative z-10">
                         <div class="text-white/50 font-medium mb-2 flex items-center gap-2" id="widget-title"><i data-feather="layers" class="w-4 h-4"></i> Чистый Капитал</div>
-                        <div class="text-5xl md:text-7xl font-bold tracking-tighter mb-4 transition-all" id="widget-balance">0.00</div>
+                        <div class="text-4xl md:text-7xl font-bold tracking-tighter mb-4 transition-all" id="widget-balance">0.00</div>
                         <div class="flex items-center gap-4 text-sm">
                             <div class="flex items-center gap-1 text-green-400 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
                                 <i data-feather="arrow-up-right" class="w-3.5 h-3.5"></i> <span id="widget-growth">+0.00</span>
@@ -150,7 +170,7 @@
                     <div class="absolute bottom-6 right-8 flex gap-2" id="widget-dots"></div>
                 </div>
 
-                <div class="rounded-3xl p-6 bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/5 cinematic-enter delay-100">
+                <div class="rounded-3xl p-5 md:p-6 bg-[#1c1c1e]/50 backdrop-blur-xl border border-white/5 cinematic-enter delay-100">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-xl font-medium tracking-tight">Недавние записи</h3>
                         <span class="text-white/40 text-xs bg-white/5 px-2 py-1 rounded">Удержи для ред.</span>
@@ -164,38 +184,38 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10" id="cards-container">
                     <div class="credit-card-container group cursor-pointer" onclick="app.openEntityModal('account', 'maib')">
-                        <div class="credit-card relative aspect-[1.6/1] rounded-3xl p-6 bg-gradient-to-br from-maib to-maib-dark border border-white/20 shadow-[0_20px_40px_-10px_rgba(50,215,75,0.3)] overflow-hidden">
+                        <div class="credit-card relative aspect-[1.6/1] rounded-3xl p-5 md:p-6 bg-gradient-to-br from-maib to-maib-dark border border-white/20 shadow-[0_20px_40px_-10px_rgba(50,215,75,0.3)] overflow-hidden">
                             <div class="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full blur-3xl group-hover:bg-white/30 transition-all"></div>
                             <div class="h-full flex flex-col justify-between relative z-10 text-black">
                                 <div class="flex justify-between items-center"><div class="font-bold text-xl tracking-tighter">maib</div><i data-feather="wifi" class="w-5 h-5"></i></div>
                                 <div>
                                     <div class="text-black/60 text-sm font-medium mb-1">Баланс (клик для ред.)</div>
-                                    <div class="text-3xl font-bold tracking-tight val-render" data-raw-id="maib">0.00</div>
+                                    <div class="text-2xl md:text-3xl font-bold tracking-tight val-render" data-raw-id="maib">0.00</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="credit-card-container group cursor-pointer" onclick="app.openEntityModal('account', 'procredit')">
-                        <div class="credit-card relative aspect-[1.6/1] rounded-3xl p-6 bg-gradient-to-br from-white to-gray-200 border border-white/10 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden">
+                        <div class="credit-card relative aspect-[1.6/1] rounded-3xl p-5 md:p-6 bg-gradient-to-br from-white to-gray-200 border border-white/10 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden">
                             <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-red-600/20 rounded-full blur-2xl"></div>
                             <div class="h-full flex flex-col justify-between relative z-10 text-apple-gray">
                                 <div class="flex justify-between items-center"><div class="font-bold text-xl tracking-tighter text-red-600">ProCreditBank</div></div>
                                 <div>
                                     <div class="text-black/50 text-sm font-medium mb-1">Баланс (клик для ред.)</div>
-                                    <div class="text-3xl font-bold tracking-tight val-render" data-raw-id="procredit">0.00</div>
+                                    <div class="text-2xl md:text-3xl font-bold tracking-tight val-render" data-raw-id="procredit">0.00</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="credit-card-container group cursor-pointer md:col-span-2" onclick="app.openEntityModal('account', 'cash')">
-                        <div class="credit-card relative h-24 rounded-3xl p-6 bg-[#1c1c1e] border border-white/10 shadow-lg overflow-hidden flex items-center justify-between hover:bg-white/5 transition-colors">
+                        <div class="credit-card relative h-24 rounded-3xl p-5 md:p-6 bg-[#1c1c1e] border border-white/10 shadow-lg overflow-hidden flex items-center justify-between hover:bg-white/5 transition-colors">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center"><i data-feather="dollar-sign"></i></div>
-                                <div class="font-bold text-xl text-white">Наличные (Тайник)</div>
+                                <div class="font-bold md:text-xl text-white">Наличные (Тайник)</div>
                             </div>
-                            <div class="text-2xl font-bold tracking-tight val-render text-white" data-raw-id="cash">0.00</div>
+                            <div class="text-xl md:text-2xl font-bold tracking-tight val-render text-white" data-raw-id="cash">0.00</div>
                         </div>
                     </div>
                 </div>
@@ -390,7 +410,7 @@
             debts: [],
             subscriptions: [],
             transactions: [],
-            monthlyCapital: [0, 0, 0, 0, 0, 0] // Jan - Jun manual capital tracking
+            monthlyCapital: [0, 0, 0, 0, 0, 0]
         };
 
         const RATES = { MDL: 1, EUR: 0.052, USD: 0.056 };
@@ -406,14 +426,8 @@
                 this.editingId = null;
                 this.txType = 'expense';
                 this.selectedEmoji = '⚡';
+                this.currentPin = '';
                 
-                document.addEventListener('keydown', (e) => {
-                    const lockScreen = document.getElementById('lock-screen');
-                    if (lockScreen.style.visibility !== 'hidden' && lockScreen.style.opacity !== '0') {
-                        document.getElementById('pin-input').focus();
-                    }
-                });
-
                 this.initAuth();
                 this.initDOM();
                 this.initCardPhysics();
@@ -469,33 +483,45 @@
                 }
             }
 
+            // --- AUTH LOGIC (NUMPAD) ---
             initAuth() {
                 this.renderAvatar();
-                const input = document.getElementById('pin-input');
+            }
+
+            pressPin(digit) {
+                if(digit === 'back') {
+                    this.currentPin = this.currentPin.slice(0, -1);
+                } else {
+                    if(this.currentPin.length < 6) this.currentPin += digit;
+                }
+                this.updatePinUI();
+            }
+
+            updatePinUI() {
                 const dots = document.getElementById('pin-dots').children;
                 const err = document.getElementById('pin-error');
-                
-                input.addEventListener('input', (e) => {
-                    const val = e.target.value;
-                    err.innerText = "Кликни куда угодно и введи пароль"; 
-                    for(let i=0; i<6; i++) {
-                        dots[i].className = i < val.length ? 'w-4 h-4 rounded-full bg-white transition-all scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'w-4 h-4 rounded-full border-2 border-white/30 transition-all';
+                err.innerText = "Введите пароль";
+
+                for(let i=0; i<6; i++) {
+                    dots[i].className = i < this.currentPin.length 
+                        ? 'w-3.5 h-3.5 rounded-full bg-white transition-all scale-125 shadow-[0_0_12px_rgba(255,255,255,0.8)]' 
+                        : 'w-3.5 h-3.5 rounded-full border-2 border-white/30 transition-all';
+                }
+
+                if(this.currentPin.length === 6) {
+                    if(this.currentPin === '684802') {
+                        document.getElementById('lock-screen').style.animation = 'unlock 0.6s var(--ease-out-expo) forwards';
+                        setTimeout(() => { this.renderAll(); }, 200);
+                    } else {
+                        err.innerText = "Неверный пароль";
+                        document.getElementById('pin-dots').classList.add('animate-bounce');
+                        setTimeout(() => {
+                            this.currentPin = '';
+                            this.updatePinUI();
+                            document.getElementById('pin-dots').classList.remove('animate-bounce');
+                        }, 500);
                     }
-                    if(val.length === 6) {
-                        if(val === '684802') {
-                            document.getElementById('lock-screen').style.animation = 'unlock 0.6s var(--ease-out-expo) forwards';
-                            setTimeout(() => { input.blur(); this.renderAll(); }, 200);
-                        } else {
-                            err.innerText = "Неверный пароль";
-                            document.getElementById('pin-dots').classList.add('animate-bounce');
-                            setTimeout(() => {
-                                input.value = '';
-                                Array.from(dots).forEach(d => d.className = 'w-4 h-4 rounded-full border-2 border-white/30 transition-all');
-                                document.getElementById('pin-dots').classList.remove('animate-bounce');
-                            }, 500);
-                        }
-                    }
-                });
+                }
             }
 
             convert(val) { return val * RATES[this.currency]; }
@@ -861,7 +887,6 @@
                 const ctxL = document.getElementById('wealthChart').getContext('2d');
                 const grad = ctxL.createLinearGradient(0, 0, 0, 300); grad.addColorStop(0, 'rgba(10, 132, 255, 0.4)'); grad.addColorStop(1, 'rgba(10, 132, 255, 0.0)');
                 
-                // Use user-defined monthly capital history
                 const capDataConverted = this.data.monthlyCapital.map(v => this.convert(v));
                 
                 if(this.chartLine) this.chartLine.destroy();
